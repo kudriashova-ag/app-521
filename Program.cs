@@ -3,8 +3,10 @@ using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using myApp.Configuration;
 using myApp.Services;
+using myApp.Services.Files;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -15,6 +17,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
 
 builder.Services.AddScoped<IMovieService, MovieService>();
+builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
 
 builder.Services.AddApiVersioning(options =>
@@ -67,7 +70,11 @@ using (var scope = app.Services.CreateScope())
     SeedData.Initialize(context);
 }
 
-
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "uploads")),
+    RequestPath = "/uploads"
+});
 
 app.MapControllers();
 

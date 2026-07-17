@@ -7,6 +7,7 @@ public class Movie
     public string Genre { get; set; } = null!;
     public int Year { get; set; }
     public int? DirectorId { get; set; }
+    public string? PosterFileName { get; set; }
 
 
     // навігаційна властивість
