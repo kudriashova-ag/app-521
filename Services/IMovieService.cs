@@ -11,4 +11,6 @@ public interface IMovieService
     Task<MovieReadDto> CreateAsync(MovieCreateDto dto);
     Task<bool> UpdateAsync(int id, MovieCreateDto dto);
     Task<bool> DeleteAsync(int id);
+    Task<MovieReadDto?> UploadPosterAsync(int id, IFormFile poster);
+
 }

@@ -11,10 +11,10 @@ public class MovieMappingProfile : Profile
         CreateMap<MovieActor, MovieCastMemberDto>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Actor.Id))
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.Actor.FirstName} {src.Actor.LastName}"));
-        
+
         CreateMap<Movie, MovieDetailDto>()
-            .ForMember(dest => dest.Actors, opt=> opt.MapFrom(src => src.MovieActors));
-        
+            .ForMember(dest => dest.Actors, opt => opt.MapFrom(src => src.MovieActors));
+
         CreateMap<MovieCreateDto, Movie>();
     }
 }

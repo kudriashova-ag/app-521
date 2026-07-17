@@ -7,4 +7,6 @@ public class ClientReadDto
     public string LastName { get; set; } = null!;
     public string FullName { get; set; } = null!;
 
+    public string? PhotoFileName { get; set; }
+
 }

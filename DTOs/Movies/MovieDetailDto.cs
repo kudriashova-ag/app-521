@@ -9,6 +9,8 @@ public class MovieDetailDto
     public string Title { get; set; } = null!;
     public string Genre { get; set; } = null!;
     public int Year { get; set; }
+    public string? PosterFileName { get; set; }
+
 
     public DirectorReadDto? Director { get; set; }
     public List<MovieCastMemberDto>? Actors { get; set; }

@@ -4,7 +4,6 @@ using Asp.Versioning.ApiExplorer;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
-using myApp.Configuration;
 using myApp.Services;
 using myApp.Services.Files;
 
@@ -16,8 +15,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
 
+builder.Services.AddHttpContextAccessor(); // для FileUrlBuilder для отримання запиту
+
 builder.Services.AddScoped<IMovieService, MovieService>();
-builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+
+builder.Services.AddSingleton<IFileUrlBuilder, FileUrlBuilder>();
+builder.Services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
 
 builder.Services.AddApiVersioning(options =>

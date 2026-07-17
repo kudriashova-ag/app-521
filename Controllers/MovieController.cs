@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using myApp.DTOs.Movies;
 using myApp.Helpers.QueryParameters;
 using myApp.Services;
+using myApp.Services.Files;
 
 [ApiController]
 [Route("api/movies")]
@@ -76,4 +77,20 @@ public class MovieController : ControllerBase
         var deleted = await _movieService.DeleteAsync(id);
         return deleted ? NoContent() : NotFound();
     }
+
+    [HttpPost("{id:int}/poster")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(1024 * 1024 * 10)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UploadPoster(int id, IFormFile poster)
+    {
+        var error = FileValidators.ValidateImage(poster, 10 * 1024 * 1024);
+        if (error is not null) return BadRequest(new { error });
+
+        var movieDto = await _movieService.UploadPosterAsync(id, poster);  // save file to DB 
+        return movieDto is not null ? Ok(movieDto) : NotFound();
+    }
+
 }

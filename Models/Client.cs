@@ -15,4 +15,7 @@ public class Client
     [Phone]
     public string Phone { get; set; } = null!;
     public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+    public string? PhotoFileName { get; set; }   // '435b5-dg4fgd-sdf4.jpg'
+    
 }
