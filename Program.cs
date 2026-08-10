@@ -2,8 +2,10 @@ using System.Reflection;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using Data;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using myApp.Filters;
 using myApp.Services;
 using myApp.Services.Files;
 
@@ -18,6 +20,13 @@ builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
 builder.Services.AddHttpContextAccessor(); // для FileUrlBuilder для отримання запиту
 
 builder.Services.AddScoped<IMovieService, MovieService>();
+
+// FluentValidation  реєстрація всіх валідаторів
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+// Фільтр валідації для всіх DTO
+builder.Services.AddScoped(typeof(ValidationFilter<>));
+
 
 builder.Services.AddSingleton<IFileUrlBuilder, FileUrlBuilder>();
 builder.Services.AddSingleton<IFileStorageService, LocalFileStorageService>();

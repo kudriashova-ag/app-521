@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using myApp.DTOs.Movies;
+using myApp.Filters;
 using myApp.Helpers.QueryParameters;
 using myApp.Services;
 using myApp.Services.Files;
@@ -50,6 +51,7 @@ public class MovieController : ControllerBase
     /// <param name="dto"> movie create dto </param>
     /// <returns> movie read dto </returns>
     [HttpPost]
+    [ServiceFilter(typeof(ValidationFilter<MovieCreateDto>))]
     [ProducesResponseType<MovieReadDto>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<MovieReadDto>> CreateMovie(MovieCreateDto dto)

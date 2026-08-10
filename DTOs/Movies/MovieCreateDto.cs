@@ -8,19 +8,16 @@ public class MovieCreateDto
     /// <summary>
     /// Movie title
     /// </summary>
-    [Required, MinLength(1), MaxLength(200)]
     public string Title { get; set; } = null!;
 
     /// <summary>
     /// Movie genre
     /// </summary>
-    [Required, MaxLength(50)]
     public string Genre { get; set; } = null!;
 
     /// <summary>
     /// Movie year
     /// </summary>
-    [Required, YearRange(1888)]
     public int Year { get; set; }
 
     /// <summary>
