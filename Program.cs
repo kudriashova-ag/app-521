@@ -5,6 +5,7 @@ using Data;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using myApp.ExceptionHandling;
 using myApp.Filters;
 using myApp.Services;
 using myApp.Services.Files;
@@ -26,6 +27,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Фільтр валідації для всіх DTO
 builder.Services.AddScoped(typeof(ValidationFilter<>));
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 
 builder.Services.AddSingleton<IFileUrlBuilder, FileUrlBuilder>();
@@ -59,13 +63,15 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();  // формує xml файл
-    app.UseSwaggerUI(options=>
+    app.UseSwaggerUI(options =>
     {
         var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
-        
+
         foreach (var description in provider.ApiVersionDescriptions)
         {
             options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());

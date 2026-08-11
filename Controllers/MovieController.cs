@@ -41,7 +41,7 @@ public class MovieController : ControllerBase
     public async Task<IActionResult> GetMovie(int id)
     {
         var movie = await _movieService.GetByIdAsync(id);
-        return movie == null ? NotFound() : Ok(movie);
+        return  Ok(movie);
     }
 
 

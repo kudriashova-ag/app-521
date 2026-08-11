@@ -3,6 +3,7 @@ using AutoMapper.QueryableExtensions;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using myApp.DTOs.Movies;
+using myApp.Exceptions;
 using myApp.Helpers.Pagination;
 using myApp.Helpers.Queryable;
 using myApp.Helpers.QueryParameters;
@@ -47,7 +48,8 @@ public class MovieService(
             .Include(m => m.Director)       // eager loading (жадібне завантаження) 
             .Include(m => m.MovieActors)    // eager loading (жадібне завантаження)
             .ThenInclude(ma => ma.Actor)    // eager loading (жадібне завантаження)
-            .FirstOrDefaultAsync(m => m.Id == id);
+            .FirstOrDefaultAsync(m => m.Id == id)
+            ?? throw new NotFoundException("Movie not found");
 
         if (movie == null) return null;
 
