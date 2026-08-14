@@ -9,6 +9,7 @@ using myApp.ExceptionHandling;
 using myApp.Filters;
 using myApp.Services;
 using myApp.Services.Files;
+using myApp.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -62,9 +63,10 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
-
+// 1. Обробка винятків 
 app.UseExceptionHandler();
 
+// 2. Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();  // формує xml файл
@@ -80,7 +82,6 @@ if (app.Environment.IsDevelopment())
     }); // читає xml файл та відображає інтерфейс
 }
 
-
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -88,12 +89,33 @@ using (var scope = app.Services.CreateScope())
     SeedData.Initialize(context);
 }
 
+// 3. Перенаправлення з http на https
+app.UseHttpsRedirection();
+
+app.UseMiddleware<RequestLoggingMiddleware>();
+
+
+// 4. Статичні файли
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "uploads")),
     RequestPath = "/uploads"
 });
 
+// 5. Роутинг явна маршрутизація
+app.UseRouting();
+
+// 6. Логування
+
+// 7. useCors
+app.UseCors();
+
+// 8. Аутентифікація та Авторизація
+// app.UseAuthentication();
+// app.UseAuthorization();
+
+
+// 9. Маппінг контролерів
 app.MapControllers();
 
 app.Run();
