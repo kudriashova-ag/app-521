@@ -90,7 +90,7 @@ public class ClientController : ControllerBase
         var client = await _context.Clients.AsNoTracking().FirstOrDefaultAsync(c => c.Id == clientId);
         if (client?.PhotoFileName is null) return NotFound();
         
-        return null;
+        return Ok();
        // Response.Headers.Add("Content-Type", "image/jpeg");
        // return Ok({ "message": "success" });
     }

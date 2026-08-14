@@ -10,6 +10,9 @@ using myApp.Filters;
 using myApp.Services;
 using myApp.Services.Files;
 using myApp.Middleware;
+using MyApp.Models;
+using Microsoft.AspNetCore.Identity;
+using MyApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -17,10 +20,23 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    //options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 6;
+})
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+
+
 builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
 
 builder.Services.AddHttpContextAccessor(); // для FileUrlBuilder для отримання запиту
 
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMovieService, MovieService>();
 
 // FluentValidation  реєстрація всіх валідаторів
