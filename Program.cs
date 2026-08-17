@@ -13,6 +13,12 @@ using myApp.Middleware;
 using MyApp.Models;
 using Microsoft.AspNetCore.Identity;
 using MyApp.Services;
+using myApp.Services.Auth;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -38,6 +44,47 @@ builder.Services.AddHttpContextAccessor(); // для FileUrlBuilder для от�
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMovieService, MovieService>();
+builder.Services.AddScoped<ITokenService, JwtTokenService>();
+
+
+var jwt = builder.Configuration.GetSection("Jwt");
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        // AddIdentity() виставив своєю схемою cookie (Identity.Application), і вона
+        // перебиває DefaultScheme. Для Web API cookie не потрібні — задаємо явно.
+        options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        // не перейменовувати claims з коротких імен у довгі WS-Federation URI
+        options.MapInboundClaims = false;
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwt["Issuer"],
+
+            ValidateAudience = true,
+            ValidAudience = jwt["Audience"],
+
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,   // дефолт 5 хв — токен «не протухає» вчасно
+
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                                  Encoding.UTF8.GetBytes(jwt["Key"]!)),
+
+            NameClaimType = JwtRegisteredClaimNames.Sub,
+            RoleClaimType = "role"       // живе в парі з MapInboundClaims = false
+        };
+    });
+
+
 
 // FluentValidation  реєстрація всіх валідаторів
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
@@ -76,6 +123,16 @@ builder.Services.AddSwaggerGen(options =>
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     options.IncludeXmlComments(xmlPath);
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "Bearer",
+        Description = "Please enter token",
+    });
 });
 
 var app = builder.Build();
@@ -127,12 +184,12 @@ app.UseRouting();
 app.UseCors();
 
 // 8. Аутентифікація та Авторизація
-// app.UseAuthentication();
-// app.UseAuthorization();
+app.UseAuthentication(); // хто ти?  заповнює HttpContext.User
+app.UseAuthorization(); // що тобі можна? 
 
 
 // 9. Маппінг контролерів
-app.MapControllers();
+app.MapControllers();         
 
 app.Run();
 

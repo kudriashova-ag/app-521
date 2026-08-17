@@ -6,5 +6,5 @@ namespace MyApp.Services;
 public interface IAuthService
 {
     Task<IdentityResult> RegisterAsync(RegisterDto dto);
-    Task<SignInResult> LoginAsync(LoginDto dto);
+    Task<LoginResult> LoginAsync(LoginDto dto);
 }

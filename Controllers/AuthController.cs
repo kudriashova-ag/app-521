@@ -34,9 +34,16 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login(LoginDto dto)
     {
         var result = await _authService.LoginAsync(dto);
-        if(result.IsLockedOut) return BadRequest("Користувач заблокований");
-        if (!result.Succeeded) return Unauthorized("Неправильний логін або пароль");
-        return Ok(result);
+        if (!result.Success)
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Title = result.IsLockedOut ? "Аккаунт заблоковано" : "Неправильний логін або пароль",
+                Status = StatusCodes.Status401Unauthorized
+            });
+
+        }
+        return Ok(result.Response);
     }
 
 }

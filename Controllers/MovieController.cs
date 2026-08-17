@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using myApp.DTOs.Movies;
 using myApp.Filters;
@@ -41,7 +42,7 @@ public class MovieController : ControllerBase
     public async Task<IActionResult> GetMovie(int id)
     {
         var movie = await _movieService.GetByIdAsync(id);
-        return  Ok(movie);
+        return Ok(movie);
     }
 
 
@@ -50,6 +51,7 @@ public class MovieController : ControllerBase
     /// </summary>
     /// <param name="dto"> movie create dto </param>
     /// <returns> movie read dto </returns>
+    [Authorize]
     [HttpPost]
     [ServiceFilter(typeof(ValidationFilter<MovieCreateDto>))]
     [ProducesResponseType<MovieReadDto>(StatusCodes.Status201Created)]

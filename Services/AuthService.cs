@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using myApp.Services.Auth;
 using MyApp.DTOs.Identity;
 using MyApp.Models;
 
@@ -8,11 +9,16 @@ public class AuthService : IAuthService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly ITokenService _tokenService;
 
-    public AuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+    public AuthService(
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
+        ITokenService tokenService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _tokenService = tokenService;
     }
 
     public async Task<IdentityResult> RegisterAsync(RegisterDto dto)
@@ -25,13 +31,26 @@ public class AuthService : IAuthService
         return await _userManager.CreateAsync(user, dto.Password);
     }
 
-    public async Task<SignInResult> LoginAsync(LoginDto dto)
+    public async Task<LoginResult> LoginAsync(LoginDto dto)
     {
-        var result = await _signInManager.PasswordSignInAsync(
-            dto.Email,
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+
+        if (user is null) return new LoginResult(false, false, null);
+
+        var result = await _signInManager.CheckPasswordSignInAsync(
+            user,
             dto.Password,
-            isPersistent: false,
             lockoutOnFailure: true);
-        return result;
+            
+        Console.WriteLine("!!!!RESULT");
+
+        Console.WriteLine(result);
+        if (!result.Succeeded) return new LoginResult(false, result.IsLockedOut, null);
+
+        var token = await _tokenService.CreateAccessTokenAsync(user);
+        return new LoginResult(true, false,  new AuthResponseDto(
+            Token: token.Token,
+            ExpiresAtUtc: token.ExpiresAtUtc
+        ));
     }
 }
