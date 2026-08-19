@@ -23,6 +23,7 @@ public class MovieController : ControllerBase
     /// Get all movies
     /// </summary>
     /// <returns> List of movies </returns>
+    [Authorize]
     [HttpGet]
     [ProducesResponseType<IEnumerable<MovieReadDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMovies([FromQuery] MovieQueryParameters parameters)
@@ -51,7 +52,7 @@ public class MovieController : ControllerBase
     /// </summary>
     /// <param name="dto"> movie create dto </param>
     /// <returns> movie read dto </returns>
-    [Authorize]
+    
     [HttpPost]
     [ServiceFilter(typeof(ValidationFilter<MovieCreateDto>))]
     [ProducesResponseType<MovieReadDto>(StatusCodes.Status201Created)]

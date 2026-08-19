@@ -6,6 +6,7 @@ public class SeedData
 {
     public static void Initialize(AppDbContext context)
     {
+        // add movies
 
         if (!context.Clients.Any())
         {

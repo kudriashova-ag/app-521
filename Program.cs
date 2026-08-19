@@ -45,6 +45,7 @@ builder.Services.AddHttpContextAccessor(); // для FileUrlBuilder для от�
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMovieService, MovieService>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
+builder.Services.AddScoped<RoleService>();
 
 
 var jwt = builder.Configuration.GetSection("Jwt");
@@ -99,6 +100,18 @@ builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<IFileUrlBuilder, FileUrlBuilder>();
 builder.Services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", builder =>
+    {
+        builder
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials()
+            .WithOrigins("http://127.0.0.1:5500");
+    });
+});
+
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -130,9 +143,15 @@ builder.Services.AddSwaggerGen(options =>
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
         BearerFormat = "JWT",
-        Scheme = "Bearer",
+        Scheme = "bearer",
         Description = "Please enter token",
     });
+
+    options.AddSecurityRequirement(doc=>new OpenApiSecurityRequirement
+    {
+       [new OpenApiSecuritySchemeReference("Bearer", doc)] = new List<string>()
+    });
+    
 });
 
 var app = builder.Build();
@@ -181,7 +200,7 @@ app.UseRouting();
 // 6. Логування
 
 // 7. useCors
-app.UseCors();
+app.UseCors("FrontendPolicy");
 
 // 8. Аутентифікація та Авторизація
 app.UseAuthentication(); // хто ти?  заповнює HttpContext.User

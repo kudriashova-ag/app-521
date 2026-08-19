@@ -6,6 +6,9 @@ using MyApp.Services;
 
 namespace MyApp.Controllers;
 
+[ApiController]
+[Consumes("application/json")]
+[Produces("application/json")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
