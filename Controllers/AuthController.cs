@@ -1,7 +1,10 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using myApp.Filters;
 using MyApp.DTOs.Identity;
+using MyApp.Models;
 using MyApp.Services;
 
 namespace MyApp.Controllers;
@@ -12,10 +15,13 @@ namespace MyApp.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public AuthController(IAuthService authService)
+
+    public AuthController(IAuthService authService, UserManager<ApplicationUser> userManager)
     {
         _authService = authService;
+        _userManager = userManager;
     }
 
     [HttpPost("register")]
@@ -47,6 +53,25 @@ public class AuthController : ControllerBase
 
         }
         return Ok(result.Response);
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetMe()
+    {
+        /*  var id = User.FindFirstValue("sub");
+         var email = User.FindFirstValue("email");
+         var isAdmin = User.IsInRole("admin");
+         return Ok(new { id, email, isAdmin }); */
+
+        /* var id = User.FindFirstValue("sub");
+        var user = await _userManager.FindByIdAsync(id);
+        var roles = await _userManager.GetRolesAsync(user); */
+
+        var user = await _authService.UserData();
+        return Ok(new { user });
     }
 
 }

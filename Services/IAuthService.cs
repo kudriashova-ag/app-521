@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using MyApp.DTOs.Identity;
 
@@ -7,4 +8,5 @@ public interface IAuthService
 {
     Task<IdentityResult> RegisterAsync(RegisterDto dto);
     Task<LoginResult> LoginAsync(LoginDto dto);
+    Task<string> UserData();
 }
