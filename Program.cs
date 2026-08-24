@@ -20,6 +20,7 @@ using System.Text;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.OpenApi;
 using myApp.Behaviors;
+using myApp.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -53,6 +54,8 @@ builder.Services.AddMediatR(cfg =>
     cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
 }
 );
+
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 
 
 var jwt = builder.Configuration.GetSection("Jwt");

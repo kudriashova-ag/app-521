@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using myApp.Configuration;
 using MyApp.Models;
 
 namespace myApp.Services.Auth;
@@ -11,26 +13,24 @@ namespace myApp.Services.Auth;
 public sealed class JwtTokenService : ITokenService
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IConfiguration _configuration;
+    private readonly JwtOptions _jwtOptions;
 
     public JwtTokenService(
         UserManager<ApplicationUser> userManager,
-        IConfiguration configuration)
+        IOptions<JwtOptions> jwtOptions)
     {
         _userManager = userManager;
-        _configuration = configuration;
+        _jwtOptions = jwtOptions.Value;
     }
 
     public async Task<AccessTokenResult> CreateAccessTokenAsync(
         ApplicationUser user,
         CancellationToken cancellationToken = default)
     {
-        var jwt = _configuration.GetSection("Jwt");
-
-        var issuer = jwt["Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer не налаштовано");
-        var audience = jwt["Audience"] ?? throw new InvalidOperationException("Jwt:Audience не налаштовано");
-        var key = jwt["Key"] ?? throw new InvalidOperationException("Jwt:Key не налаштовано");
-        var minutes = jwt.GetValue<int?>("AccessTokenMinutes") ?? 15;
+        var issuer = _jwtOptions.Issuer ?? throw new InvalidOperationException("Jwt:Issuer не налаштовано");
+        var audience = _jwtOptions.Audience ?? throw new InvalidOperationException("Jwt:Audience не налаштовано");
+        var key = _jwtOptions.Key ?? throw new InvalidOperationException("Jwt:Key не налаштовано");
+        var minutes = _jwtOptions.AccessTokenMinutes;
 
         var now = DateTime.UtcNow;
         var expiresAt = now.AddMinutes(minutes);
