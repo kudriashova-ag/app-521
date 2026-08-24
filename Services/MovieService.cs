@@ -1,5 +1,4 @@
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using myApp.DTOs.Movies;

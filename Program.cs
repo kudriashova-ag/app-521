@@ -19,6 +19,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.OpenApi;
+using myApp.Behaviors;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -42,10 +43,16 @@ builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
 
 builder.Services.AddHttpContextAccessor(); // для FileUrlBuilder для отримання запиту
 
-builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMovieService, MovieService>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<RoleService>();
+
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+}
+);
 
 
 var jwt = builder.Configuration.GetSection("Jwt");
@@ -120,7 +127,7 @@ builder.Services.AddApiVersioning(options =>
     options.ReportApiVersions = true;
 })
 .AddMvc()
-.AddApiExplorer(options=>
+.AddApiExplorer(options =>
 {
     options.SubstituteApiVersionInUrl = true;
     options.GroupNameFormat = "'v'VV";
@@ -147,11 +154,11 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Please enter token",
     });
 
-    options.AddSecurityRequirement(doc=>new OpenApiSecurityRequirement
+    options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
     {
-       [new OpenApiSecuritySchemeReference("Bearer", doc)] = new List<string>()
+        [new OpenApiSecuritySchemeReference("Bearer", doc)] = new List<string>()
     });
-    
+
 });
 
 var app = builder.Build();
@@ -208,7 +215,7 @@ app.UseAuthorization(); // що тобі можна?
 
 
 // 9. Маппінг контролерів
-app.MapControllers();         
+app.MapControllers();
 
 app.Run();
 
