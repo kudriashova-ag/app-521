@@ -22,6 +22,8 @@ using Microsoft.OpenApi;
 using myApp.Behaviors;
 using myApp.Configuration;
 using Serilog;
+using System.Threading.RateLimiting;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -98,6 +100,39 @@ builder.Services
 
 
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.GlobalLimiter = PartitionedRateLimiter.CreateChained(
+    // Захтист сервера - 1000req/s загалом
+    PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter("global", _ => new FixedWindowRateLimiterOptions
+        {
+            Window = TimeSpan.FromSeconds(1),
+            PermitLimit = 3
+        })
+    ),
+
+    // 5req для одного користувача на 10s
+    PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        var key = context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+        ?? context.Connection.RemoteIpAddress?.ToString()
+        ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+        {
+            Window = TimeSpan.FromSeconds(10),
+            PermitLimit = 5,
+            QueueLimit = 0
+        });
+    })
+    );
+});
+
+
+
 // FluentValidation  реєстрація всіх валідаторів
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
@@ -107,11 +142,12 @@ builder.Services.AddScoped(typeof(ValidationFilter<>));
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+builder.Services.AddScoped<ISanitizerService, SanitizerService>();
 
 builder.Services.AddScoped<IFileUrlBuilder, FileUrlBuilder>();
 builder.Services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
-builder.Host.UseSerilog((context, cfg)=>
+builder.Host.UseSerilog((context, cfg) =>
     cfg.ReadFrom.Configuration(context.Configuration)
 );
 
@@ -125,6 +161,7 @@ builder.Services.AddCors(options =>
             .AllowCredentials()
             .WithOrigins("http://127.0.0.1:5500");
     });
+
 });
 
 
@@ -221,9 +258,9 @@ app.UseCors("FrontendPolicy");
 app.UseAuthentication(); // хто ти?  заповнює HttpContext.User
 app.UseAuthorization(); // що тобі можна? 
 
+app.UseRateLimiter();
 
 // 9. Маппінг контролерів
 app.MapControllers();
 
 app.Run();
-

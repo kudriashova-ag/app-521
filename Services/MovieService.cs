@@ -9,6 +9,7 @@ using myApp.Helpers.QueryParameters;
 using myApp.Models;
 using myApp.Services.Files;
 using MyApp.Models;
+using MyApp.Services;
 
 namespace myApp.Services;
 
@@ -17,7 +18,8 @@ public class MovieService(
     IMapper mapper,
     IFileStorageService fileStorage,
     IFileUrlBuilder _urls,
-    ILogger<MovieService> logger) : IMovieService
+    ILogger<MovieService> logger,
+    ISanitizerService _sanitizer) : IMovieService
 {
 
     private const string PosterFolder = "posters";
@@ -69,6 +71,8 @@ public class MovieService(
 
     public async Task<MovieReadDto> CreateAsync(MovieCreateDto dto)
     {
+        dto.Title = _sanitizer.SanitizeString(dto.Title);
+        
         var movie = mapper.Map<Movie>(dto);
         context.Movies.Add(movie);
         await context.SaveChangesAsync();
