@@ -46,7 +46,7 @@ public class MovieService(
 
     public async Task<MovieDetailDto?> GetByIdAsync(int id)
     {
-        logger.LogError("Get movie by id {id}", id);
+        logger.LogWarning("Get movie by id {id}", id);
 
         var movie = await context.Movies
             .Include(m => m.Director)       // eager loading (жадібне завантаження) 
@@ -57,7 +57,10 @@ public class MovieService(
             .FirstOrDefaultAsync(m => m.Id == id)
             ?? throw new NotFoundException("Movie not found");
 
-        if (movie == null) return null;
+        if (movie == null) {
+            logger.LogWarning("Movie not found");
+            return null;
+        }
 
         var dto = mapper.Map<MovieDetailDto>(movie);
         dto.PosterFileName = _urls.PublicUrl(movie?.PosterFileName, PosterFolder);

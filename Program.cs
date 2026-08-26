@@ -21,6 +21,7 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.OpenApi;
 using myApp.Behaviors;
 using myApp.Configuration;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -109,6 +110,10 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddScoped<IFileUrlBuilder, FileUrlBuilder>();
 builder.Services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+
+builder.Host.UseSerilog((context, cfg)=>
+    cfg.ReadFrom.Configuration(context.Configuration)
+);
 
 builder.Services.AddCors(options =>
 {
