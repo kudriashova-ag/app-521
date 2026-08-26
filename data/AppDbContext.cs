@@ -2,6 +2,7 @@ namespace Data;
 
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using myApp.Models;
 using MyApp.Models;
 
 public class AppDbContext : IdentityDbContext<ApplicationUser>
@@ -15,6 +16,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Director> Directors { get; set; } = null!;
     public DbSet<Actor> Actors { get; set; } = null!;
     public DbSet<MovieActor> MovieActors { get; set; } = null!;
+    public DbSet<MovieAttachment> MovieAttachments { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

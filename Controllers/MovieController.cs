@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using myApp.DTOs.Movies;
+using myApp.Exceptions;
 using myApp.Filters;
 using myApp.Helpers.QueryParameters;
 using myApp.Services;
@@ -13,10 +14,12 @@ using myApp.Services.Files;
 public class MovieController : ControllerBase
 {
     private readonly IMovieService _movieService;
+    private readonly LinkGenerator _linkGenerator;
 
-    public MovieController(IMovieService movieService)
+    public MovieController(IMovieService movieService, LinkGenerator linkGenerator)
     {
         _movieService = movieService;
+        _linkGenerator = linkGenerator;
     }
 
     /// <summary>
@@ -43,6 +46,19 @@ public class MovieController : ControllerBase
     public async Task<IActionResult> GetMovie(int id)
     {
         var movie = await _movieService.GetByIdAsync(id);
+        if (movie is null) return NotFound();
+        foreach (var attachment in movie.Attachments)
+        {
+            attachment.DownloadUrl = _linkGenerator.GetUriByAction(
+                HttpContext,
+                action: "Download",
+                controller: "Movie",
+                values: new
+                {
+                    attachmentId = attachment.Id
+                }
+                ) ?? throw new InvalidOperationException("Failed to generate download url");
+        }
         return Ok(movie);
     }
 
@@ -52,7 +68,7 @@ public class MovieController : ControllerBase
     /// </summary>
     /// <param name="dto"> movie create dto </param>
     /// <returns> movie read dto </returns>
-    
+
     [HttpPost]
     [ServiceFilter(typeof(ValidationFilter<MovieCreateDto>))]
     [ProducesResponseType<MovieReadDto>(StatusCodes.Status201Created)]
@@ -97,5 +113,41 @@ public class MovieController : ControllerBase
         var movieDto = await _movieService.UploadPosterAsync(id, poster);  // save file to DB 
         return movieDto is not null ? Ok(movieDto) : NotFound();
     }
+
+
+    [HttpPost("{movieId:int}/attachments")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(1024 * 1024 * 10)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UploadAttachment(int movieId, IFormFile file)
+    {
+        try
+        {
+            var attachmentId = await _movieService.AddAttachmentAsync(movieId, file);
+            if (attachmentId is null) return NotFound();
+
+            return CreatedAtAction(nameof(Download), new { movieId, attachmentId }, new { attachmentId });
+        }
+        catch (FileValidationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpGet("attachments/{attachmentId:int}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Download(int attachmentId, CancellationToken ct)
+    {
+        var download = await _movieService.GetAttachmentAsync(attachmentId, ct);
+        if (download is null) return NotFound();
+
+        // attachment → браузер запропонує зберегти файл під оригінальним ім'ям.
+        return File(download.Download, download.ContentType, download.DownloadName);
+    }
+
 
 }

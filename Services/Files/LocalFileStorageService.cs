@@ -1,4 +1,23 @@
+using Microsoft.AspNetCore.StaticFiles;
+
 namespace myApp.Services.Files;
+
+public class StoredFile
+{
+    public string FileName { get; set; } = null!;
+    public string OriginalFileName { get; set; } = null!;
+    public long Size { get; set; }
+    public string ContentType { get; set; } = null!;
+
+    public StoredFile(string fileName, string originalFileName, long size, string contentType)
+    {
+        FileName = fileName;
+        OriginalFileName = originalFileName;
+        Size = size;
+        ContentType = contentType;
+    }
+}
+
 
 public class LocalFileStorageService : IFileStorageService
 {
@@ -13,7 +32,7 @@ public class LocalFileStorageService : IFileStorageService
 
     private string RootFor(FileVisibility v) => v == FileVisibility.Public ? _publicRoot : _privateRoot;
 
-    public async Task<string> SaveAsync(IFormFile file, string folder, FileVisibility visibility)
+    public async Task<StoredFile> SaveAsync(IFormFile file, string folder, FileVisibility visibility)
     {
         var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName).ToLowerInvariant(); //fsf786fsfcds.jpg
         var directory = Path.Combine(RootFor(visibility), folder); //  /uploads/posters
@@ -23,7 +42,7 @@ public class LocalFileStorageService : IFileStorageService
         // save
         await using var stream = new FileStream(fullPath, FileMode.CreateNew, FileAccess.Write);
         await file.CopyToAsync(stream);
-        return fileName;
+        return new StoredFile(fileName, Path.GetFileName(file.FileName), file.Length, file.ContentType);
     }
 
     public void Delete(string folder, string fileName, FileVisibility visibility)
@@ -32,12 +51,20 @@ public class LocalFileStorageService : IFileStorageService
         if (File.Exists(path)) File.Delete(path);
     }
 
-    public Stream? OpenRead(string folder, string fileName, FileVisibility visibility)
+    public Task<FileDownload?> OpenRead(string folder, string fileName, FileVisibility visibility)
     {
-        var path = ResolveSafePath(folder, fileName, visibility);
-        return File.Exists(path)
-            ? new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read)
-            : null;
+        var safeName = Path.GetFileName(fileName);
+        var fullPath = Path.Combine(RootFor(visibility), folder, safeName);
+
+        if (!File.Exists(fullPath)) return Task.FromResult<FileDownload?>(null);
+
+        var provider = new FileExtensionContentTypeProvider();
+        if (!provider.TryGetContentType(fullPath, out var contentType))
+            contentType = "application/octet-stream";
+        
+        Stream stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+        return Task.FromResult<FileDownload?>(new FileDownload(stream, contentType, safeName));
+       
     }
 
     private string ResolveSafePath(string folder, string fileName, FileVisibility visibility)

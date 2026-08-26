@@ -107,7 +107,7 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 
-builder.Services.AddSingleton<IFileUrlBuilder, FileUrlBuilder>();
+builder.Services.AddScoped<IFileUrlBuilder, FileUrlBuilder>();
 builder.Services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
 builder.Services.AddCors(options =>

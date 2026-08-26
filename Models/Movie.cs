@@ -1,3 +1,5 @@
+using myApp.Models;
+
 namespace MyApp.Models;
 
 public class Movie
@@ -8,6 +10,8 @@ public class Movie
     public int Year { get; set; }
     public int? DirectorId { get; set; }
     public string? PosterFileName { get; set; }
+
+    public ICollection<MovieAttachment> Attachments { get; set; } = new List<MovieAttachment>();
 
 
     // навігаційна властивість

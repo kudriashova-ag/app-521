@@ -1,5 +1,9 @@
 namespace myApp.Services.Files;
 
+/// <summary>
+/// Клас для валідацій файлів: перевірка формату, розміру та сигнатури
+/// </summary>
+
 public static class FileValidators
 {
     private static readonly string[] allowedExtensions = [".jpg", ".png", ".jpeg", ".webp"];
@@ -32,7 +36,7 @@ public static class FileValidators
     private static bool ValidateSignature(IFormFile file, string ext)
     {
         if (!Signatures.TryGetValue(ext, out var signature)) return false;
-        
+
         using var stream = file.OpenReadStream();
         var header = new byte[8];
         var read = stream.Read(header, 0, header.Length);

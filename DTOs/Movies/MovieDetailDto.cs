@@ -14,4 +14,6 @@ public class MovieDetailDto
 
     public DirectorReadDto? Director { get; set; }
     public List<MovieCastMemberDto>? Actors { get; set; }
+
+    public List<MovieAttachmentDto> Attachments { get; set; } = [];
 }

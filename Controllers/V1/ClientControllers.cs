@@ -68,13 +68,13 @@ public class ClientController : ControllerBase
         // service
         var oldPhoto = client.PhotoFileName;
 
-        client.PhotoFileName = await _fileStorageService.SaveAsync(photo, PhotoFolder, FileVisibility.Private);
-        await _context.SaveChangesAsync();
+        // client.PhotoFileName = await _fileStorageService.SaveAsync(photo, PhotoFolder, FileVisibility.Private);
+        // await _context.SaveChangesAsync();
 
-        if (oldPhoto is not null)
-        {
-            _fileStorageService.Delete(PhotoFolder, oldPhoto, FileVisibility.Private);
-        }
+        // if (oldPhoto is not null)
+        // {
+        //     _fileStorageService.Delete(PhotoFolder, oldPhoto, FileVisibility.Private);
+        // }
 
         var dto = _mapper.Map<ClientReadDto>(client);
         // dto.PhotoFileName = _fileUrlBuilder.EndpointUrl(client.PhotoFileName, PhotoFolder);

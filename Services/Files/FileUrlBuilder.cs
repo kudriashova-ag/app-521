@@ -26,9 +26,9 @@ public class FileUrlBuilder: IFileUrlBuilder
 
 
     // Private 
-    public string? EndpointUrl(string? fileName)
-    {
-        throw new NotImplementedException();
-    }
+    // public string? EndpointUrl(string? fileName)
+    // {
+    //     throw new NotImplementedException();
+    // }
 
 }
