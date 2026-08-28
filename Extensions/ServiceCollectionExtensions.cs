@@ -171,4 +171,14 @@ public static class ServiceCollectionExtensions
 
         return builder;
     }
+
+    public static IServiceCollection OpenWeatherConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<OpenWeatherOptions>()
+            .Bind(configuration.GetSection(OpenWeatherOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        return services;
+    }
 }

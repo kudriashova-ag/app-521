@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using myApp.Configuration;
+using myApp.Integrations.OpenWeather;
 using myApp.Services.Files;
 
 [ApiController]
@@ -10,7 +11,8 @@ public class DemoController(
     IFileStorageService fileStorage,
     IOptions<JwtOptions> options,
     IOptionsSnapshot<JwtOptions> optionsSnapshot,
-    IOptionsMonitor<JwtOptions> optionsMonitor
+    IOptionsMonitor<JwtOptions> optionsMonitor,
+    IWeatherClient weatherClient
     ) : ControllerBase
 {
 
@@ -33,13 +35,22 @@ public class DemoController(
     {
         return Ok(new
         {
-            Options =  options.Value.AccessTokenMinutes,
+            Options = options.Value.AccessTokenMinutes,
             Snapshot = optionsSnapshot.Value.AccessTokenMinutes,
             Monitor = optionsMonitor.CurrentValue.AccessTokenMinutes,
             ProcessStarted = Process.GetCurrentProcess().StartTime
         });
-    } 
+    }
 
 
+    [HttpGet("weather")]
+    public async Task<IActionResult> GetWeather()
+    {
+        // var client = new HttpClient();
+        // var json = await client.GetAsync("https://api.openweathermap.org/data/2.5/weather?q=Dnipro&appid=b3ea3946cd08306b75c8e73b04e6a794&units=metric");
+        // var result = await json.Content.ReadAsStringAsync();
+        // return Ok(result);
 
+        return Ok(await weatherClient.GetCurrentWeatherAsync("Dnipro"));
+    }
 }
